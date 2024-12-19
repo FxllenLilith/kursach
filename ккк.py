@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import sqlite3
 import re
+import pandas as pd
 
 # Database connection
 def connect_db():
@@ -703,9 +704,13 @@ def admin_window(user):
     edit_dog_button = ttk.Button(admin_win, text="Изменить данные о собаке", command=edit_dog_window)
     edit_dog_button.grid(row=6, column=0, padx=10, pady=10)
 
+    # Кнопка для экспорта данных в Excel
+    export_excel_button = ttk.Button(admin_win, text="Экспорт в Excel", command=export_to_excel)
+    export_excel_button.grid(row=7, column=0, padx=10, pady=10)
+
     # Кнопка "Назад"
     back_button = ttk.Button(admin_win, text="Назад", command=lambda: go_back(admin_win))
-    back_button.grid(row=7, column=0, padx=10, pady=10)
+    back_button.grid(row=8, column=0, padx=10, pady=10)
 
     admin_win.mainloop()
 
@@ -791,6 +796,31 @@ def edit_dog_window():
     # Кнопка "Назад"
     back_button = ttk.Button(edit_dog_win, text="Назад", command=lambda: go_back(edit_dog_win))
     back_button.pack(padx=10, pady=10)
+
+# Функция для экспорта данных в Excel
+def export_to_excel():
+    conn = connect_db()
+    query = "SELECT * FROM Exhibitions"
+    exhibitions_df = pd.read_sql_query(query, conn)
+
+    query = "SELECT * FROM Dogs"
+    dogs_df = pd.read_sql_query(query, conn)
+
+    query = "SELECT * FROM Owners"
+    owners_df = pd.read_sql_query(query, conn)
+
+    query = "SELECT * FROM Participation"
+    participation_df = pd.read_sql_query(query, conn)
+
+    conn.close()
+
+    with pd.ExcelWriter("dog_exhibition_data.xlsx", engine="xlsxwriter") as writer:
+        exhibitions_df.to_excel(writer, sheet_name="Exhibitions", index=False)
+        dogs_df.to_excel(writer, sheet_name="Dogs", index=False)
+        owners_df.to_excel(writer, sheet_name="Owners", index=False)
+        participation_df.to_excel(writer, sheet_name="Participation", index=False)
+
+    show_error_window("Данные успешно экспортированы в файл dog_exhibition_data.xlsx")
 
 # Создание таблиц и запуск главного окна
 create_tables()
